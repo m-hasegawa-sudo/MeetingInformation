@@ -84,34 +84,45 @@ SYSTEM_PROMPT = """
 # 出力例
 
 例1（国内学会）：
-[blue][u][uri=https://www.micenavi.jp/endo2023/]第96回日本内分泌学会学術集会（2023/6/1-3、名古屋）[/uri][/u][/blue]
-[b]Gタンパク共役型受容体101（GPR101）遺伝子変異を同定した複合型下垂体機能低下症の兄弟例[/b]
-森川俊太郎、金子直哉、中山加奈子、菱村希、山口健史、佐々木大輔、上田泰弘、渡邊さやか、青柳勇人、中村明枝、真部淳
+[blue][u][uri=https://example.org/conference2023/]第96回日本内科学会学術集会（2023/6/1-3、東京）[/uri][/u][/blue]
+[b]新規治療法の開発に関する基礎研究[/b]
+山田太郎、佐藤花子、鈴木一郎、田中次郎
 
-例2（海外学会 - ASH）：
-[blue][u][uri=]67th ASH Annual Meeting and Exposition (2025/12/6-9, Orlando, Florida)[/uri][/u][/blue]
-[b]Genetic landscape of pediatric myelodysplastic syndrome in Japan[/b]
-Masataka Hasegawa, Kaito Mimura, Rintaro Ono, Dai Keino, Shin-Ichi Tsujimoto, Kiyotaka Isobe, Takao Deguchi, Hideto Iwafuchi, Hiroshi Moritake, Hironori Goto, Atsushi Manabe, Seishi Ogawa, Kenichi Yoshida, Daisuke Hasegawa
+例2（海外学会）：
+[blue][u][uri=]67th International Medical Conference (2025/12/6-9, New York, USA)[/uri][/u][/blue]
+[b]Novel approaches in clinical research[/b]
+Taro Yamada, Hanako Sato, Ichiro Suzuki, Jiro Tanaka
 
 例3（情報不足）：
-[blue][u][uri=]第67回日本小児血液・がん学会学術集会（日付、福岡国際会議場）[/uri][/u][/blue]
-[b]小児骨髄異形成症候群のゲノム解析[/b]
-長谷河昌孝、共同演者
+[blue][u][uri=]第67回日本医学会総会（日付、パシフィコ横浜）[/uri][/u][/blue]
+[b]臨床研究の新展開[/b]
+山田太郎、共同演者
 """
+
+# API Key設定（Streamlit Secretsから取得）
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
+    api_key_configured = True
+except (KeyError, FileNotFoundError):
+    api_key = None
+    api_key_configured = False
 
 # API Key入力セクション
 with st.sidebar:
     st.header("⚙️ 設定")
-    api_key = st.text_input(
-        "Gemini API Key",
-        type="password",
-        help="Google AI StudioからAPIキーを取得してください"
-    )
     
-    if api_key:
-        st.success("✅ API Key設定済み")
+    if api_key_configured:
+        st.success("✅ API Key設定済み（Secrets使用）")
     else:
-        st.warning("⚠️ API Keyを入力してください")
+        st.warning("⚠️ Streamlit SecretsにGEMINI_API_KEYが設定されていません")
+        api_key = st.text_input(
+            "Gemini API Key（手動入力）",
+            type="password",
+            help="Google AI StudioからAPIキーを取得してください"
+        )
+        
+        if api_key:
+            st.info("ℹ️ 手動入力されたAPI Keyを使用します")
     
     st.markdown("---")
     st.markdown("""
@@ -133,19 +144,19 @@ with col1:
         placeholder="""採択通知メール、登録完了メール、抄録などをコピー&ペーストしてください
 
 国内学会の例：
-第67回日本小児血液・がん学会学術集会
-演題名：小児骨髄異形成症候群のゲノム解析
-筆頭演者：長谷河 昌孝
-共同演者：三村海渡、渡邉健太郎、岡田愛
+第67回日本医学会総会
+演題名：新規治療法の臨床応用に関する研究
+筆頭演者：山田 太郎
+共同演者：佐藤花子、鈴木一郎、田中次郎
 日時：11月19日（水）11:10～12:00
-会場：第4会場（福岡国際会議場）
+会場：第1会場（パシフィコ横浜）
 
 海外学会の例：
-Dear Dr. Hasegawa,
+Dear Dr. Smith,
 We are pleased to inform you that your abstract has been selected for poster presentation...
-Session Name: 636. Myelodysplastic Syndromes
+Session Name: 123. Clinical Research
 Session Date: December 8, 2025
-Title: Genetic landscape of pediatric myelodysplastic syndrome in Japan
+Title: Novel approaches in medical research
 ...""",
         key="input_area"
     )
@@ -263,9 +274,9 @@ if 'output_text' not in st.session_state:
         
         **例：**
         ```
-        [blue][u][uri=https://www.credoinc.jp/jspe58/]第58回日本小児内分泌学会学術集会（2025/10/30-11/1、千葉）[/uri][/u][/blue]
-        [b]ハイブリッドクローズドループ療法が有効であったWolfram症候群の2例[/b]
-        遠藤愛、金子直哉、菱村希、鈴木滋、中村明枝、森川俊太郎
+        [blue][u][uri=https://example.org/conference2023/]第58回日本医学会総会（2025/10/30-11/1、東京）[/uri][/u][/blue]
+        [b]新規治療法の臨床応用に関する研究[/b]
+        山田太郎、佐藤花子、鈴木一郎、田中次郎
         ```
         
         ※ 不足情報は項目名（「日付」「共同演者」など）で表示されます
@@ -277,7 +288,7 @@ st.markdown("""
 <div style="text-align: center; color: #888;">
     <small>
     💡 ヒント: 複数の学会情報が混在している場合は、1つずつ処理してください<br>
-    🔒 API Keyは保存されません。ページを更新すると再入力が必要です
+    🔒 Streamlit SecretsでGEMINI_API_KEYを設定することを推奨します
     </small>
 </div>
 """, unsafe_allow_html=True)
